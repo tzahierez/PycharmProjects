@@ -1,0 +1,41 @@
+<!-- templates/view_exam_template.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>View Exam Template</title>
+    <!-- Add some inline CSS for simplicity, or move this to a separate CSS file -->
+    <style>
+        .question-block {
+            margin-bottom: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .question-block label,
+        .question-block textarea {
+            display: block; /* Make them stack vertically */
+            margin-bottom: 5px;
+        }
+        .question-block textarea {
+            width: 100%;
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Exam Template Details</h1>
+    <form method="post" action="{{ url_for('exam.save_exam') }}">
+        {% for question in exam.questions %}
+            <div class="question-block">
+                <h3>Question {{ loop.index }}</h3>
+                <p>{{ question.question_text }}</p>
+                <label for="answer{{ question.id }}">Proposed Answer:</label>
+                <textarea id="answer{{ question.id }}" name="answer{{ question.id }}" rows="4">{{ question.perfect_answer }}</textarea>
+                <label for="evaluation_criteria{{ question.id }}">How to evaluate this question:</label>
+                <textarea id="evaluation_criteria{{ question.id }}" name="evaluation_criteria{{ question.id }}" rows="2"></textarea>
+            </div>
+        {% endfor %}
+        <button type="submit">Create Test Template</button>
+    </form>
+</body>
+</html>

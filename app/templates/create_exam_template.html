@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create a New Exam</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/spinner.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Create a New Exam</h1>
+        <div class="form-row">
+            <input type="text" name="course" placeholder="Course">
+            <input type="text" name="subject" placeholder="Subject">
+            <input type="text" name="context" placeholder="Context">
+            <input type="number" name="number_of_questions" placeholder="Number of Questions">
+        </div>
+        <button id="start-generate-test" type="button">Start Generate Test</button>
+
+        <!-- Spinner for Loading -->
+        <div id="spinner" class="spinner">
+            <div class="rect1"></div>
+            <div class="rect2"></div>
+            <div class="rect3"></div>
+            <div class="rect4"></div>
+            <div class="rect5"></div>
+        </div>
+
+        <!-- Container to hold the dynamically added questions -->
+        <form id="questions-form" style="display:none;">
+            <div id="questions-container"></div>
+            <button id="submit-questions-button" type="submit">Create Test Template</button>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('#start-generate-test').click(function() {
+                var formData = {
+                    'course': $('input[name=course]').val(),
+                    'subject': $('input[name=subject]').val(),
+                    'context': $('input[name=context]').val(),
+                    'number_of_questions': $('input[name=number_of_questions]').val()
+                };
+
+                $('#questions-container').empty(); // Clear previous questions
+                $('#spinner').show(); // Show spinner
+
+                $.ajax({
+                    type: 'POST',
+                    url: '{{ url_for("exam.generate_questions") }}',
+                    data: formData,
+                    dataType: 'json',
+                    encode: true,
+                    success: function(data) {
+                        $('#spinner').hide(); // Hide spinner when data is received
+                        data.forEach(function(item, index) {
+                            $('#questions-container').append(
+                                '<div class="question-block">' +
+                                '<label>Question ' + (index + 1) + ':</label>' +
+                                '<p>' + item.question + '</p>' +
+                                '<label for="answer' + index + '">Suggested Answer:</label>' +
+                                '<textarea id="answer' + index + '" name="answer' + index + '">' + item.answer + '</textarea>' +
+                                '<label for="evaluation_criteria' + index + '">Evaluation Criteria:</label>' +
+                                '<textarea id="evaluation_criteria' + index + '" name="evaluation_criteria' + index + '"></textarea>' +
+                                '</div>'
+                            );
+                        });
+
+                        $('#questions-form').show(); // Show the questions form
+                    },
+                    error: function() {
+                        $('#spinner').hide(); // Hide spinner if there is an error
+                        alert('An error occurred while generating the questions.');
+                    }
+                });
+            });
+
+            $('#questions-form').submit(function(event) {
+                event.preventDefault(); // Prevent the default form submission
+                $('#spinner').show(); // Show spinner
+
+                var questionsData = {
+                    'course': $('input[name=course]').val(),
+                    'subject': $('input[name=subject]').val(),
+                    'context': $('input[name=context]').val(),
+                    'number_of_questions': $('input[name=number_of_questions]').val(),
+                    'questions': []
+                };
+
+                $('.question-block').each(function(index) {
+                    questionsData.questions.push({
+                        'question': $(this).find('p').text(),
+                        'answer': $(this).find('textarea[name="answer' + index + '"]').val(),
+                        'evaluation_criteria': $(this).find('textarea[name="evaluation_criteria' + index + '"]').val()
+                    });
+                });
+
+                $.ajax({
+                    type: 'POST',
+                    url: '{{ url_for("exam.save_exam_template") }}',
+                    data: questionsData,
+                    dataType: 'json',
+                    encode: true,
+                    success: function(response) {
+                        $('#spinner').hide(); // Hide spinner when operation is complete
+                        alert('Exam template successfully created. ID: ' + response.exam_template_id);
+                    },
+                    error: function() {
+                        $('#spinner').hide(); // Hide spinner if there is an error
+                        alert('An error occurred while creating the exam template.');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

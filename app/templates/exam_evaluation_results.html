@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Evaluation Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #0b79bf;
+        }
+        .evaluation-item {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        .evaluation-item:last-child {
+            border-bottom: none;
+        }
+        .question {
+            color: #0b79bf;
+            font-weight: bold;
+        }
+        .answer, .evaluation {
+            margin-bottom: 10px;
+        }
+        .grade {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Exam Evaluation Results for Exam ID: {{ exam_id }}</h1>
+        {% for eval in evaluations %}
+            <div class="evaluation-item">
+                <p class="question">Question: {{ eval.question_text }}</p>
+                <p class="answer">Student's Answer: {{ eval.student_answer }}</p>
+                <p class="evaluation">Evaluation: {{ eval.evaluation }}</p>
+                <p class="grade">Grade: {{ eval.grade }}/100</p>
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
