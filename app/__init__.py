@@ -1,29 +1,11 @@
-# # app/__init__.py
-#
-# from flask import Flask
-# from flask_sqlalchemy import SQLAlchemy
-# from flask_migrate import Migrate
-# from app.routes.task_routes import tasks_bp
-#
-# #app = Flask(__name__)
-# app.register_blueprint(tasks_bp)
-# # Replace 'todo-list' with the actual username, 'pass' with the actual password, and 'todo_db' with your actual database name.
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://todo-list:pass@localhost/todo_db'
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # to silence the deprecation warning
-#
-# db = SQLAlchemy(app)
-# migrate = Migrate(app, db)
-#
-# # Import models here to ensure they are known to Flask-Migrate before running migrations
-# from app.models import Task
-#
-# # Other parts of your Flask app initialization go here
+
 
 # app/__init__.py
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from config import Config
+from app.routes.ocr_routes import ocr_routes
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -38,8 +20,11 @@ def create_app():
 
     from app.routes.exam_routes import exam_routes
     from app.routes.person_routes import person_routes
+    from app.routes.playground_routes import playground_routes
     app.register_blueprint(exam_routes, url_prefix='/exam')
     app.register_blueprint(person_routes, url_prefix='/person')
+    app.register_blueprint(playground_routes, url_prefix='/playground')
+    app.register_blueprint(ocr_routes, url_prefix='/ocr')
 
     # Import models here to ensure they are known to Flask-Migrate before running migrations from app.models import Task
 

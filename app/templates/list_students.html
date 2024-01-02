@@ -1,10 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title>List of Students</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/common_styles.css') }}">
 </head>
 <body>
-$END$
+    <div class="container">
+        <h1>List of Students</h1>
+        <table>
+            <tr>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Email</th>
+                <!-- Add other fields as necessary -->
+            </tr>
+            {% for student in students %}
+            <tr>
+                <td>{{ student.first_name }}</td>
+                <td>{{ student.last_name }}</td>
+                <td>{{ student.email }}</td>
+                <!-- Add other fields as necessary -->
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
 </body>
 </html>

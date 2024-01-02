@@ -47,8 +47,8 @@ def create_exam_template():
     return render_template('create_exam_template.html', step=1)
 
 
-@exam_routes.route('/exams_list', methods=['GET'])
-def exams_list():
+@exam_routes.route('/exam_templates_list', methods=['GET'])
+def exam_templates_list():
     exam_templates = ExamTemplate.query.all()
     exams_data = []
     for exam_template in exam_templates:
@@ -60,7 +60,7 @@ def exams_list():
             'questions': questions
         }
         exams_data.append(exam_data)
-    return render_template('exams_list.html', exams_data=exams_data)
+    return render_template('exam_templates_list.html', exams_data=exams_data)
 
 
 @exam_routes.route('/generate_questions', methods=['POST'])
@@ -118,7 +118,7 @@ def save_exam():
     # Commit the changes to the database
     db.session.commit()
 
-    return redirect(url_for('exam.exams_list'))  # Redirect to the desired endpoint
+    return redirect(url_for('exam.exam_templates_list'))  # Redirect to the desired endpoint
 
 
 @exam_routes.route('/save_exam_template', methods=['POST'])
@@ -163,16 +163,16 @@ def save_exam_template():
     })
 
 
-@exam_routes.route('/exam/<int:exam_id>', methods=['GET'])
-def view_exam(exam_id):
+@exam_routes.route('/take_exam_selector', methods=['GET'])
+def take_exam_selector():
     # Real fetching exam data
-    exam = ExamTemplate.query.get_or_404(exam_id)
-    questions = QuestionTemplate.query.filter_by(exam_template_id=exam_id).all()
-    return render_template('view_exam.html', exam=exam, questions=questions)
+    # exam = ExamTemplate.query.get_or_404(exam_id)
+    # questions = QuestionTemplate.query.filter_by(exam_template_id=exam_id).all()
+    return render_template('take_exam_selector.html')
 
 
-@exam_routes.route('/view_test/<int:exam_template_id>', methods=['GET'])
-def view_test(exam_template_id):
+@exam_routes.route('/take_exam/<int:exam_template_id>', methods=['GET'])
+def take_exam(exam_template_id):
     # Fetch the exam template
     exam_template = ExamTemplate.query.get_or_404(exam_template_id)
 
@@ -180,7 +180,7 @@ def view_test(exam_template_id):
     questions = QuestionTemplate.query.filter_by(exam_template_id=exam_template_id).all()
 
     # Render a template to display the exam and its questions
-    return render_template('view_exam.html', exam_template=exam_template, questions=questions)
+    return render_template('take_exam.html', exam_template=exam_template, questions=questions, course=exam_template.course, subject=exam_template.subject)
 
 
 @exam_routes.route('/submit_test/<int:exam_template_id>', methods=['POST'])
@@ -255,6 +255,7 @@ def chat():
         conversation_history = '' #session_contexts.get(user_id, [])
 
         # OPENAI_API_KEY=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   ( replaced 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)
+        # OPENAI_API_KEY=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
         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
         print('sending req to gpt ', conversation_history)
@@ -293,6 +294,8 @@ def validate_exam():
         for question, answer in zip(questions, student_answers):
             evaluation = evaluate_student_answers_with_gpt(
                 course_name=exam_template.course,
+                subject=exam_template.subject,
+                chapter=exam_template.chapter,
                 question=question.question_text,
                 perfect_answer=question.perfect_answer,
                 evaluation_criteria=question.evaluation_criteria,
@@ -311,8 +314,41 @@ def validate_exam():
     return render_template('validate_exam.html')
 
 
-def evaluate_student_answers_with_gpt(course_name, question, perfect_answer, evaluation_criteria, student_answer):
+@exam_routes.route('/taken-exams')
+
+def taken_exams():
+    exams = Exam.query.all()
+    exams_data = []
+
+    for exam in exams:
+        exam_data = {
+            "exam_id": exam.id,
+            "student_email": exam.student_email,
+            "questions": []
+        }
+
+        # Fetch questions and student answers for this exam
+        student_answers = StudentAnswer.query.filter_by(exam_id=exam.id).all()
+        for answer in student_answers:
+            question = QuestionTemplate.query.filter_by(id=answer.question_template_id).first()
+            question_data = {
+                "question_text": question.question_text if question else '',
+                "student_answer": answer.student_answer,
+                "ai_grade": answer.ai_grade,
+                "ai_grade_reason": answer.ai_grade_reason
+            }
+            exam_data["questions"].append(question_data)
+
+        exams_data.append(exam_data)
+
+    return render_template('taken_exams.html', exams_data=exams_data)
+
+
+def evaluate_student_answers_with_gpt(course_name, subject, chapter, question, perfect_answer, evaluation_criteria, student_answer):
     prompt = (
+        f"Course: {course_name}\n"
+        f"Subject: {subject}\n"
+        f"Context: {chapter}\n"
         f"Course: {course_name}\n"
         f"Question: {question}\n"
         f"Perfect Answer: {perfect_answer}\n"
@@ -320,6 +356,8 @@ def evaluate_student_answers_with_gpt(course_name, question, perfect_answer, eva
         f"Student Answer: {student_answer}\n\n"
         f"Based on the criteria, evaluate the student's answer. Provide a grade on a scale of 0 to 100 and feedback:"
     )
+
+    print(prompt)
 
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     response = client.chat.completions.create(
@@ -333,3 +371,7 @@ def evaluate_student_answers_with_gpt(course_name, question, perfect_answer, eva
 @exam_routes.route('/test')
 def test_route():
     return 'Test route is working'
+
+@exam_routes.route('/links', methods=['GET'])
+def links():
+    return render_template('links.html')

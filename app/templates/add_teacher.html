@@ -1,26 +1,85 @@
-<!-- templates/add_teacher.html -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Add Teacher</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 300px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            margin-bottom: 5px;
+            color: #555;
+        }
+
+        input[type=text], input[type=email], input[type=submit] {
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        input[type=submit] {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+
+        input[type=submit]:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-    <h1>Add New Teacher</h1>
-    <form action="{{ url_for('person.add_teacher') }}" method="post">
-        <label for="first_name">First Name:</label>
-        <input type="text" id="first_name" name="first_name"><br><br>
+    <div class="container">
+        <h1>Add New Teacher</h1>
+        <form action="{{ url_for('person.add_teacher') }}" method="post" class="teacher-form">
+            <div class="form-group">
+                <label for="first_name">First Name:</label>
+                <input type="text" id="first_name" name="first_name" class="input-field">
+            </div>
 
-        <label for="last_name">Last Name:</label>
-        <input type="text" id="last_name" name="last_name"><br><br>
+            <div class="form-group">
+                <label for="last_name">Last Name:</label>
+                <input type="text" id="last_name" name="last_name" class="input-field">
+            </div>
 
-        <label for="email">Email:</label>
-        <input type="email" id="email" name="email"><br><br>
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" class="input-field">
+            </div>
 
-        <!-- Add other fields as necessary -->
+            <!-- Add other fields as necessary -->
 
-        <input type="submit" value="Submit">
-    </form>
+            <input type="submit" value="Submit" class="submit-button">
+        </form>
+    </div>
 </body>
 </html>

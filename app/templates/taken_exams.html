@@ -1,10 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>$Title$</title>
+    <meta charset="UTF-8">
+    <title>Taken Exams</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .exam {
+            margin-bottom: 40px;
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .exam h2 {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .question {
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .question h3 {
+            margin-top: 0;
+        }
+        .answer {
+            background-color: #e9ebee; /* Light grey background */
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
-$END$
+    <div class="container">
+        <h1>Taken Exams</h1>
+        {% for exam in exams_data %}
+        <div class="exam">
+            <h2>Exam ID: {{ exam.exam_id }} - Student: {{ exam.student_email }}</h2>
+            {% for question in exam.questions %}
+            <div class="question">
+                <h3>Question {{ loop.index }}: {{ question.question_text }}</h3>
+                <div class="answer">
+                    <strong>Student's Answer:</strong>
+                    <p>{{ question.student_answer }}</p>
+                    <strong>AI Grade:</strong>
+                    <p>{{ question.ai_grade }}</p>
+                    <strong>AI Grade Reason:</strong>
+                    <p>{{ question.ai_grade_reason }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    </div>
 </body>
 </html>

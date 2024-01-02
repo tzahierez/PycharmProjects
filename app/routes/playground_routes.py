@@ -1,64 +1,77 @@
-# person_routes.py
+import os
+import PyPDF2
+from openai import OpenAI
+from flask import Flask, request, jsonify, render_template, Blueprint, current_app
 
-from flask import Blueprint, request, render_template, redirect, url_for
-from app import db
-from app.models.exam import Student
-from app.models.exam import Teacher
-
-person_routes = Blueprint('person', __name__)
-
-
-@person_routes.route('/add_student', methods=['GET', 'POST'])
-def add_student():
-    if request.method == 'POST':
-        # Extract data from form
-        first_name = request.form.get('first_name')
-        last_name = request.form.get('last_name')
-        email = request.form.get('email')
-        # Other fields...
-
-        # Create new Student object
-        new_student = Student(first_name=first_name, last_name=last_name, email=email)
-        # Add other fields as necessary
-
-        # Add to database
-        db.session.add(new_student)
-        db.session.commit()
-
-        # Redirect to a different page, or back to the form
-        return redirect(url_for('person.add_student'))
-
-    return render_template('add_student.html')
-
-@person_routes.route('/list_students')
-def list_students():
-    # Query the database to get all students
-    students = Student.query.all()
-
-    # Render a template and pass the students list to it
-    return render_template('list_students.html', students=students)
+playground_routes = Blueprint('playground', __name__)
+api_key = os.getenv("OPENAI_API_KEY")
 
 
-# In person_routes.py or similar file
+def split_text_into_chunks(text, chunk_size=1000):
+    # Splits the text into chunks, each with a maximum of chunk_size characters
+    return [text[i:i + chunk_size] for i in range(0, len(text), chunk_size)]
 
-@person_routes.route('/add_teacher', methods=['GET', 'POST'])
-def add_teacher():
-    if request.method == 'POST':
-        # Extract data from form
-        first_name = request.form.get('first_name')
-        last_name = request.form.get('last_name')
-        email = request.form.get('email')
-        # Other fields...
 
-        # Create new Teacher object
-        new_teacher = Teacher(first_name=first_name, last_name=last_name, email=email)
-        # Add other fields as necessary
+def summarize_text_chunk(text_chunk):
+    prompt = f"Summarize the following text: {text_chunk}"
+    client = OpenAI(api_key=api_key)
+    response = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "system", "content": prompt}]
+    )
+    print(response.choices[0].message.content.strip())
+    return response.choices[0].message.content.strip()
 
-        # Add to database
-        db.session.add(new_teacher)
-        db.session.commit()
 
-        # Redirect or provide feedback
-        return redirect(url_for('person.add_teacher'))
+@playground_routes.route('/summarize_pdf', methods=['GET', 'POST'])
+def summarize_pdf():
+    if request.method == "POST":
+        # Check if a file was uploaded
+        if "file" not in request.files:
+            return "No file part"
 
-    return render_template('add_teacher.html')
+        file = request.files["file"]
+
+        # Check if the file has a name
+        if file.filename == "":
+            return "No selected file"
+
+        # Check if the file is a PDF
+        if not file.filename.endswith(".pdf"):
+            return "Unsupported file type (PDF only)"
+
+        # Save the uploaded PDF file
+        upload_folder = current_app.config['UPLOAD_FOLDER']
+        pdf_path = os.path.join(upload_folder, file.filename)
+        file.save(pdf_path)
+
+        # Extract text from PDF
+        text = ""
+        with open(pdf_path, 'rb') as file:
+            reader = PyPDF2.PdfReader(file)
+            for page in reader.pages:
+                text += page.extract_text()
+
+        # Check if text extraction was successful
+        if not text:
+            return "Failed to extract text from PDF"
+
+        # Use OpenAI to summarize the PDF content
+        try:
+            # Split the text into manageable chunks
+            text_chunks = split_text_into_chunks(text)
+
+            # Summarize each chunk
+            summaries = [summarize_text_chunk(chunk) for chunk in text_chunks]
+
+            # Combine summaries
+            combined_summary = ' '.join(summaries)
+            print(combined_summary)
+        except Exception as e:
+            return f"An error occurred: {str(e)}"
+
+        return render_template("pdf_summary_result.html", summary=combined_summary)
+
+    return render_template("pdf_upload.html")
+
+# Add the rest of your Flask application setup here if needed

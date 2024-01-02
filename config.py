@@ -44,4 +44,10 @@ class Config:
     #local not working fro some reason...
     #SQLALCHEMY_DATABASE_URI = 'mysql+mysqlconnector://todo_list:pass@localhost/todo_db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    UPLOAD_FOLDER = os.getenv("UPLOAD_FOLDER")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     # Other configuration settings...
+
+    os.environ['TESSDATA_PREFIX'] = '/Users/Shared/'
+
+

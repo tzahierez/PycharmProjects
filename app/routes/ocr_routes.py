@@ -1,64 +1,25 @@
-# person_routes.py
+# import cv2
+# import pytesseract
+# import numpy as np
+from flask import request, render_template, Blueprint
 
-from flask import Blueprint, request, render_template, redirect, url_for
-from app import db
-from app.models.exam import Student
-from app.models.exam import Teacher
-
-person_routes = Blueprint('person', __name__)
-
-
-@person_routes.route('/add_student', methods=['GET', 'POST'])
-def add_student():
-    if request.method == 'POST':
-        # Extract data from form
-        first_name = request.form.get('first_name')
-        last_name = request.form.get('last_name')
-        email = request.form.get('email')
-        # Other fields...
-
-        # Create new Student object
-        new_student = Student(first_name=first_name, last_name=last_name, email=email)
-        # Add other fields as necessary
-
-        # Add to database
-        db.session.add(new_student)
-        db.session.commit()
-
-        # Redirect to a different page, or back to the form
-        return redirect(url_for('person.add_student'))
-
-    return render_template('add_student.html')
-
-@person_routes.route('/list_students')
-def list_students():
-    # Query the database to get all students
-    students = Student.query.all()
-
-    # Render a template and pass the students list to it
-    return render_template('list_students.html', students=students)
+# Define the Blueprint
+ocr_routes = Blueprint('ocr', __name__)
 
 
-# In person_routes.py or similar file
-
-@person_routes.route('/add_teacher', methods=['GET', 'POST'])
-def add_teacher():
-    if request.method == 'POST':
-        # Extract data from form
-        first_name = request.form.get('first_name')
-        last_name = request.form.get('last_name')
-        email = request.form.get('email')
-        # Other fields...
-
-        # Create new Teacher object
-        new_teacher = Teacher(first_name=first_name, last_name=last_name, email=email)
-        # Add other fields as necessary
-
-        # Add to database
-        db.session.add(new_teacher)
-        db.session.commit()
-
-        # Redirect or provide feedback
-        return redirect(url_for('person.add_teacher'))
-
-    return render_template('add_teacher.html')
+# @ocr_routes.route('/', methods=['GET', 'POST'])
+# def upload_picture():
+#     if request.method == 'POST':
+#         file = request.files['file']
+#         if file.filename == '':
+#             return "No selected file"
+#         if file:
+#             # Convert string data to numpy array
+#             npimg = np.frombuffer(file.read(), np.uint8)
+#             # Convert numpy array to image
+#             image = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
+#             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+#             text = pytesseract.image_to_string(gray, lang='heb')
+#             print(text)
+#             return render_template('ocr_results.html', text=text)
+#     return render_template('ocr_upload.html')

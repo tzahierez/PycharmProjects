@@ -30,6 +30,14 @@ def add_student():
 
     return render_template('add_student.html')
 
+@person_routes.route('/list_students')
+def list_students():
+    # Query the database to get all students
+    students = Student.query.all()
+
+    # Render a template and pass the students list to it
+    return render_template('list_students.html', students=students)
+
 
 # In person_routes.py or similar file
 

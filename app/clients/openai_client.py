@@ -7,12 +7,13 @@ from openai import OpenAI
 
 class OpenAiClient:
 
+    #TODO - notice that chapter is context. it should be changed all the way including the database
     def generate_question_to_answer_pairs(_self, course, subject, chapter, number_of_questions):
         try:
 
             # Extract text from the incoming JSON request
             # data = request.json
-            user_input = f"provide {number_of_questions} questions and perfect answers for the course {course} and the subject {subject}. your  expected reply  should have the following structure: \"<question X>:.....<answerX>....\""
+            user_input = f"provide {number_of_questions} questions and perfect answers for the course {course} and the subject {subject}. {chapter}.your  expected reply  should have the following structure: \"<question X>:.....<answerX>....\""
             # user_id = data.get('user_id', 'default_user')  # You should pass a unique user_id with each request
 
             # Retrieve the existing conversation context if it exists
