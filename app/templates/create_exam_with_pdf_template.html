@@ -16,6 +16,7 @@
             <input type="text" name="subject" placeholder="Subject">
             <input type="text" name="context" placeholder="Context">
             <input type="number" name="question_count" placeholder="Number of Questions">
+            <input type="file" name="pdf_file" id="pdf_file" accept=".pdf">
         </div>
         <button id="start-generate-test" type="button">Start Generate Test</button>
 
@@ -38,15 +39,51 @@
     <script>
         $(document).ready(function() {
             $('#start-generate-test').click(function() {
-                var formData = {
-                    'course': $('input[name=course]').val(),
-                    'subject': $('input[name=subject]').val(),
-                    'context': $('input[name=context]').val(),
-                    'question_count': $('input[name=question_count]').val()
-                };
+                var formData = new FormData();
+                formData.append('course', $('input[name=course]').val());
+                formData.append('subject', $('input[name=subject]').val());
+                formData.append('context', $('input[name=context]').val());
+                formData.append('question_count', $('input[name=question_count]').val());
+
+                var pdfFile = $('#pdf_file')[0].files[0];
+                if (pdfFile) {
+                    formData.append('pdf_file', pdfFile);
+                }
 
                 $('#questions-container').empty(); // Clear previous questions
                 $('#spinner').show(); // Show spinner
+
+
+                $.ajax({
+                    type: 'POST',
+                    url: '{{ url_for("exam.generate_questions") }}',
+                    data: formData,
+                    processData: false,  // Tell jQuery not to process the data
+                    contentType: false,  // Tell jQuery not to set contentType
+                    success: function(data) {
+                        $('#spinner').hide(); // Hide spinner when data is received
+                        data.forEach(function(item, index) {
+                            $('#questions-container').append(
+                                '<div class="question-block">' +
+                                '<label>Question ' + (index + 1) + ':</label>' +
+                                '<p>' + item.question + '</p>' +
+                                '<label for="answer' + index + '">Suggested Answer:</label>' +
+                                '<textarea id="answer' + index + '" name="answer' + index + '">' + item.answer + '</textarea>' +
+                                '<label for="evaluation_criteria' + index + '">Evaluation Criteria:</label>' +
+                                '<textarea id="evaluation_criteria' + index + '" name="evaluation_criteria' + index + '"></textarea>' +
+                                '</div>'
+                            );
+                        });
+
+                        $('#questions-form').show(); // Show the questions form
+                    },
+                    error: function() {
+                        $('#spinner').hide(); // Hide spinner if there is an error
+                        alert('An error occurred while generating the questions.');
+                    }
+                });
+
+
 
                 $.ajax({
                     type: 'POST',

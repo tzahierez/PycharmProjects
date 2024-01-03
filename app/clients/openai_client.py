@@ -8,12 +8,37 @@ from openai import OpenAI
 class OpenAiClient:
 
     #TODO - notice that chapter is context. it should be changed all the way including the database
-    def generate_question_to_answer_pairs(_self, course, subject, chapter, number_of_questions):
+    def generate_question_to_answer_pairs(_self, course, subject, context, question_count, pdf_text):
         try:
 
             # Extract text from the incoming JSON request
             # data = request.json
-            user_input = f"provide {number_of_questions} questions and perfect answers for the course {course} and the subject {subject}. {chapter}.your  expected reply  should have the following structure: \"<question X>:.....<answerX>....\""
+            #user_input = f"provide {question_count} questions and perfect answers for the course {course} and the subject {subject}. {chapter}.your  expected reply  should have the following structure: \"<question X>:.....<answerX>....\""
+
+            prompt_parts = ["Based on the following text from the course material:"]
+
+            if course:
+                prompt_parts.append(f"for the course '{course}'")
+            if context:
+                prompt_parts.append(f"which is part of a '{context}'")
+
+            prompt_parts.append(
+                f"\n\n{pdf_text}\n\nPlease provide {question_count} questions and perfect answers")
+
+            if subject:
+                prompt_parts.append(f"on the subject '{subject}'.")
+
+            prompt_parts.append(
+                "Your expected reply should have the following structure: '<question X>:.....<answer X>....'")
+
+            # Combining all parts into the final prompt
+            user_input = " ".join(prompt_parts)
+            # user_input = (
+            #     f"Based on the following text from the course material, which is part of a '{context}':\n\n"
+            #     f"{pdf_text}\n\n"
+            #     f"Please provide {question_count} questions and perfect answers for the course '{course}' and the subject '{subject}'. "
+            #     f"Your expected reply should have the following structure: '<question X>:.....<answer X>....'"
+            # )
             # user_id = data.get('user_id', 'default_user')  # You should pass a unique user_id with each request
 
             # Retrieve the existing conversation context if it exists

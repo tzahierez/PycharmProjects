@@ -1,3 +1,6 @@
+import io
+
+import PyPDF2
 from flask import Blueprint, request, render_template, jsonify, redirect, url_for
 from app import db
 from app.clients import openai_client
@@ -46,6 +49,47 @@ def create_exam_template():
     # Initial rendering of the page
     return render_template('create_exam_template.html', step=1)
 
+@exam_routes.route('/create_exam_with_pdf_template', methods=['GET', 'POST'])
+def create_exam_with_pdf_template():
+    print("create_exam_with_pdf_template is starting")
+    if request.method == 'POST':
+        # Extract the basic information from the form
+        course = request.form.get('course')
+        subject = request.form.get('subject')
+        chapter = request.form.get('chapter')
+        question_count = int(request.form.get('question_count'))
+
+        pdf_file = request.files.get('pdf_file')
+
+        # if pdf_file and pdf_file.filename != '':
+        #     print("Uploaded PDF File Name:", pdf_file.filename)
+        #     text = extract_text_from_pdf(pdf_file)
+        #     print(">>>"+text)
+
+        # Create placeholders for each question
+        questions = [{'question_text': '', 'suggested_answer': '', 'evaluation_criteria': ''} for _ in
+                     range(question_count)]
+
+        return render_template('create_exam_with_pdf_template.html', course=course, subject=subject, chapter=chapter,
+                               questions=questions, pdf_file=pdf_file, step=2)
+
+    # Initial rendering of the page
+    return render_template('create_exam_with_pdf_template.html', step=1)
+
+
+def extract_text_from_pdf(pdf_file, page_number=0):
+    if not pdf_file.stream.closed:
+        pdf_file.stream.seek(0)
+
+    reader = PyPDF2.PdfReader(pdf_file.stream)
+
+    if page_number < 0 or page_number >= len(reader.pages):
+        return "Invalid page number."
+
+    page = reader.pages[page_number]
+    text = page.extract_text()
+    return text
+
 
 @exam_routes.route('/exam_templates_list', methods=['GET'])
 def exam_templates_list():
@@ -69,9 +113,20 @@ def generate_questions():
     course = request.form['course']
     subject = request.form['subject']
     chapter = request.form['context']
-    number_of_questions = int(request.form['number_of_questions'])
+    question_count = int(request.form['question_count'])
+    #####
+    pdf_file = request.files.get('pdf_file')
 
-    questions_to_answer_pairs = openai_client.generate_question_to_answer_pairs(course, subject, chapter, number_of_questions)
+    text = ""  # Initialize text variable
+
+    if pdf_file and pdf_file.filename != '':
+        print("Uploaded PDF File Name:", pdf_file.filename)
+        text = extract_text_from_pdf(pdf_file)  # Assign the extracted text to the variable
+
+    print(">>>" + text)
+    clean_pdf_text = text.replace('\n', '').replace('\t', '')
+    ####
+    questions_to_answer_pairs = openai_client.generate_question_to_answer_pairs(course, subject, chapter, question_count, clean_pdf_text)
     print(questions_to_answer_pairs)
 
     # Generate dummy questions and answers
@@ -79,7 +134,7 @@ def generate_questions():
         {
             'question': f"Dummy question {i+1}",
             'answer': f"Dummy answer {i+1}"
-        } for i in range(number_of_questions)
+        } for i in range(question_count)
     ]
 
     # questions_to_answer_pairs = [{'answer': 'dummy ans1', 'question': 'dummy question1?'},
@@ -127,18 +182,18 @@ def save_exam_template():
     course = request.form.get('course')
     subject = request.form.get('subject')
     chapter = request.form.get('chapter')
-    number_of_questions = request.form.get('number_of_questions')
+    question_count = request.form.get('question_count')
     questions = request.form.getlist('questions[]')
     # ... other data ...
 
     # Create and save the exam template
-    new_exam_template = ExamTemplate(course=course, subject=subject, chapter=chapter, question_count=number_of_questions)
+    new_exam_template = ExamTemplate(course=course, subject=subject, chapter=chapter, question_count=question_count)
     db.session.add(new_exam_template)
     db.session.flush()
     # Add questions here as well
 
     # Add questions here as well
-    for i in range(int(number_of_questions)):
+    for i in range(int(question_count)):
         question_data = {
             'question': request.form.get(f'questions[{i}][question]'),
             'answer': request.form.get(f'questions[{i}][answer]'),
@@ -261,7 +316,7 @@ def chat():
         print('sending req to gpt ', conversation_history)
         # Call OpenAI GPT-3.5-turbo API using the updated API
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",  # Specify the GPT-3.5-turbo model
+            model="gpt-4.0",  # Specify the GPT-3.5-turbo model
             messages=[{"role": "system", "content": "You are a helpful assistant."},
                       {"role": "user", "content": user_input}]
         )
@@ -361,7 +416,7 @@ def evaluate_student_answers_with_gpt(course_name, subject, chapter, question, p
 
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4.0-turbo",
         messages=[{"role": "system", "content": prompt}]
     )
 
